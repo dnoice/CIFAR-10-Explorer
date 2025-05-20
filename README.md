@@ -2,6 +2,8 @@
 
 ![License](https://img.shields.io/badge/License-MIT-green.svg) ![Versions](https://img.shields.io/badge/Versions-3-blue.svg) ![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)
 
+![Evolution of CIFAR-10 Explorer showing the progression from v1.0 to v3.0 with visual comparison of interfaces and design improvements](assets/images/four.png)
+
 > A comprehensive platform for exploring, visualizing, and training models on the CIFAR-10 dataset - evolving across three distinct versions.
 
 ## Project Evolution
