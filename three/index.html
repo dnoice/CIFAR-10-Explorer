@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIFAR-10 Nexus | Advanced Dataset Explorer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="theme-default">
+    <div class="app-container">
+        <nav class="top-nav glass">
+            <div class="nav-brand">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <span class="logo-text">CIFAR-10 Nexus</span>
+                </div>
+                <button id="menu-toggle" class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-section="dashboard">
+                    <a href="#"><i class="fas fa-chart-network"></i> Dashboard</a>
+                </li>
+                <li class="nav-item" data-section="dataset">
+                    <a href="#"><i class="fas fa-database"></i> Dataset</a>
+                </li>
+                <li class="nav-item" data-section="models">
+                    <a href="#"><i class="fas fa-cube"></i> Models</a>
+                </li>
+                <li class="nav-item" data-section="analytics">
+                    <a href="#"><i class="fas fa-chart-bar"></i> Analytics</a>
+                </li>
+                <li class="nav-item" data-section="documentation">
+                    <a href="#"><i class="fas fa-book"></i> Documentation</a>
+                </li>
+            </ul>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="refresh-data" class="action-button pulse-effect" title="Refresh Data">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <div class="user-profile">
+                    <span>Researcher</span>
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="section-header">
+                    <h1>CIFAR-10 Interactive Explorer</h1>
+                    <p>Advanced visualization and training platform for the CIFAR-10 image classification dataset</p>
+                </div>
+
+                <!-- Status Card -->
+                <div class="status-card glass reflection">
+                    <div class="status-icon pulse-animation">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="status-content">
+                        <h3>Dataset Ready</h3>
+                        <p>CIFAR-10 contains 60,000 32x32 color images across 10 classes with 6,000 images per class</p>
+                    </div>
+                    <div class="status-actions">
+                        <button class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-info-circle"></i> Details
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card glass reflection" data-value="60000">
+                        <div class="stat-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <div class="stat-details">
+                            <div class="stat-value" data-count="60000">0</div>
+                            <div class="stat-label">Total Images</div>
+                        </div>
+                        <div class="stat-chart">
+                            <div class="chart-bar" style="height: 80%;"></div>
+                            <div class="chart-bar" style="height: 65%;"></div>
+                            <div class="chart-bar" style="height: 90%;"></div>
+                            <div class="chart-bar" style="height: 75%;"></div>
+                            <div class="chart-bar" style="height: 85%;"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass reflection" data-value="10">
+                        <div class="stat-icon">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-details">
+                            <div class="stat-value" data-count="10">0</div>
+                            <div class="stat-label">Categories</div>
+                        </div>
+                        <div class="stat-chart">
+                            <div class="radial-progress" data-progress="100"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass reflection" data-value="50000">
+                        <div class="stat-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="stat-details">
+                            <div class="stat-value" data-count="50000">0</div>
+                            <div class="stat-label">Training Images</div>
+                        </div>
+                        <div class="stat-chart">
+                            <div class="progress-ring">
+                                <svg viewBox="0 0 36 36">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path class="circle" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass reflection" data-value="10000">
+                        <div class="stat-icon">
+                            <i class="fas fa-vial"></i>
+                        </div>
+                        <div class="stat-details">
+                            <div class="stat-value" data-count="10000">0</div>
+                            <div class="stat-label">Test Images</div>
+                        </div>
+                        <div class="stat-chart">
+                            <div class="progress-ring">
+                                <svg viewBox="0 0 36 36">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path class="circle" stroke-dasharray="15, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories Section -->
+                <div class="section-container">
+                    <div class="section-header-inline">
+                        <h2>Categories</h2>
+                        <div class="tabs-container">
+                            <div class="tab active" data-tab="train">Training Set</div>
+                            <div class="tab" data-tab="test">Test Set</div>
+                        </div>
+                    </div>
+                    <div class="categories-grid" id="category-container">
+                        <!-- Categories will be populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="section-container">
+                    <div class="section-header-inline">
+                        <h2>Recent Activity</h2>
+                        <button class="btn btn-sm btn-primary">View All</button>
+                    </div>
+                    <div class="activity-timeline glass">
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h4>Model Training Completed</h4>
+                                <p>ResNet model trained with 85.2% accuracy</p>
+                                <span class="timeline-time">2 hours ago</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h4>Dataset Browsed</h4>
+                                <p>Viewed 120 images from the "automobile" category</p>
+                                <span class="timeline-time">Yesterday</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-download"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h4>Model Downloaded</h4>
+                                <p>Downloaded MobileNet trained model (3.8 MB)</p>
+                                <span class="timeline-time">3 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dataset Section -->
+            <section id="dataset" class="content-section">
+                <div class="section-header">
+                    <h1>Dataset Explorer</h1>
+                    <p>Browse and analyze the CIFAR-10 image classification dataset</p>
+                </div>
+
+                <div class="filter-toolbar glass">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search categories...">
+                    </div>
+                    <div class="filter-options">
+                        <div class="filter-group">
+                            <label>Sort by</label>
+                            <select>
+                                <option>Name (A-Z)</option>
+                                <option>Name (Z-A)</option>
+                                <option>Count (High-Low)</option>
+                                <option>Count (Low-High)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>View</label>
+                            <div class="view-toggles">
+                                <button class="view-toggle active" data-view="grid">
+                                    <i class="fas fa-th"></i>
+                                </button>
+                                <button class="view-toggle" data-view="list">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dataset-browser">
+                    <div class="category-explorer glass">
+                        <div class="category-header">
+                            <h3>Categories</h3>
+                            <span class="badge">10 total</span>
+                        </div>
+                        <ul class="category-list" id="category-list">
+                            <!-- Will be populated by JS -->
+                        </ul>
+                    </div>
+                    <div class="images-preview glass">
+                        <div class="preview-header">
+                            <h3>Images Preview</h3>
+                            <div class="preview-controls">
+                                <button class="btn btn-sm btn-outline-light">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                                <select id="image-count">
+                                    <option value="12">12 images</option>
+                                    <option value="24">24 images</option>
+                                    <option value="48">48 images</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="images-grid" id="images-grid">
+                            <div class="empty-state">
+                                <i class="fas fa-images"></i>
+                                <p>Select a category to view images</p>
+                            </div>
+                        </div>
+                        <div class="preview-footer">
+                            <button class="btn btn-primary" disabled>
+                                <i class="fas fa-download"></i> Download Selected
+                            </button>
+                            <div class="pagination">
+                                <button class="pagination-btn" disabled>
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span>Page 1 of 1</span>
+                                <button class="pagination-btn" disabled>
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Models Section -->
+            <section id="models" class="content-section">
+                <div class="section-header">
+                    <h1>Models & Training</h1>
+                    <p>Train and manage machine learning models for the CIFAR-10 dataset</p>
+                </div>
+
+                <div class="models-container">
+                    <div class="training-panel glass">
+                        <div class="panel-header">
+                            <h3>Train New Model</h3>
+                            <button class="btn btn-sm btn-primary">
+                                <i class="fas fa-sliders-h"></i> Advanced Options
+                            </button>
+                        </div>
+                        <div class="panel-body">
+                            <form id="training-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="model-type">Model Architecture</label>
+                                        <select id="model-type" name="model-type">
+                                            <option value="cnn">Convolutional Neural Network (CNN)</option>
+                                            <option value="resnet">ResNet-18</option>
+                                            <option value="mobilenet">MobileNetV2</option>
+                                            <option value="efficientnet">EfficientNet-B0</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="batch-size">Batch Size</label>
+                                        <select id="batch-size" name="batch-size">
+                                            <option value="16">16</option>
+                                            <option value="32" selected>32</option>
+                                            <option value="64">64</option>
+                                            <option value="128">128</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="epochs">Number of Epochs</label>
+                                        <div class="range-input-group">
+                                            <input type="range" id="epochs-range" min="1" max="50" value="10">
+                                            <input type="number" id="epochs" name="epochs" value="10" min="1" max="50">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="learning-rate">Learning Rate</label>
+                                        <select id="learning-rate" name="learning-rate">
+                                            <option value="0.01">0.01</option>
+                                            <option value="0.001" selected>0.001</option>
+                                            <option value="0.0001">0.0001</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Data Augmentation</label>
+                                        <div class="toggle-options">
+                                            <label class="toggle">
+                                                <input type="checkbox" id="aug-flip" checked>
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-label">Horizontal Flips</span>
+                                            </label>
+                                            <label class="toggle">
+                                                <input type="checkbox" id="aug-rotation" checked>
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-label">Random Rotation</span>
+                                            </label>
+                                            <label class="toggle">
+                                                <input type="checkbox" id="aug-shift">
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-label">Random Shifts</span>
+                                            </label>
+                                            <label class="toggle">
+                                                <input type="checkbox" id="aug-zoom">
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-label">Random Zoom</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="panel-footer">
+                            <button id="reset-form-btn" class="btn btn-outline-light">Reset</button>
+                            <button id="start-training-btn" class="btn btn-gradient">
+                                <i class="fas fa-play"></i> Start Training
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="training-progress glass hidden" id="training-progress-container">
+                        <div class="progress-header">
+                            <h3>Training in Progress</h3>
+                            <div class="status-badge pulse-animation">
+                                <i class="fas fa-circle"></i> Running
+                            </div>
+                        </div>
+                        <div class="progress-body">
+                            <div class="progress-stats">
+                                <div class="stat-item">
+                                    <div class="label">Time Elapsed</div>
+                                    <div class="value" id="training-time">00:00:00</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="label">Current Epoch</div>
+                                    <div class="value" id="current-epoch">0/10</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="label">Current Accuracy</div>
+                                    <div class="value" id="current-accuracy">0.00%</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="label">ETA</div>
+                                    <div class="value" id="training-eta">--:--:--</div>
+                                </div>
+                            </div>
+                            <div class="progress-visualization">
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" id="training-progress-bar" style="width: 0%"></div>
+                                </div>
+                                <div class="progress-percentage" id="progress-percentage">0%</div>
+                            </div>
+                            <div class="training-log" id="training-log">
+                                <p>Ready to start training. Configure parameters and click "Start Training"...</p>
+                            </div>
+                            <div class="live-charts">
+                                <div class="chart-container">
+                                    <div class="chart-header">
+                                        <h4>Accuracy</h4>
+                                    </div>
+                                    <div class="chart-body">
+                                        <canvas id="accuracy-chart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <div class="chart-header">
+                                        <h4>Loss</h4>
+                                    </div>
+                                    <div class="chart-body">
+                                        <canvas id="loss-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-footer">
+                            <button id="cancel-training-btn" class="btn btn-outline-light">Cancel</button>
+                            <button id="pause-training-btn" class="btn btn-primary">
+                                <i class="fas fa-pause"></i> Pause
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="section-container">
+                        <div class="section-header-inline">
+                            <h3>Saved Models</h3>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-outline-light">
+                                    <i class="fas fa-sort"></i> Sort
+                                </button>
+                                <button class="btn btn-sm btn-outline-light">
+                                    <i class="fas fa-filter"></i> Filter
+                                </button>
+                            </div>
+                        </div>
+                        <div id="models-container" class="models-grid">
+                            <!-- Empty state for models -->
+                            <div class="empty-state" id="empty-models">
+                                <i class="fas fa-cubes"></i>
+                                <h3>No Models Saved Yet</h3>
+                                <p>Train your first model to see it appear here</p>
+                            </div>
+                            <!-- Model cards will be added by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section (New) -->
+            <section id="analytics" class="content-section">
+                <div class="section-header">
+                    <h1>Performance Analytics</h1>
+                    <p>Compare models and analyze performance metrics</p>
+                </div>
+
+                <div class="analytics-dashboard">
+                    <div class="chart-panel glass">
+                        <div class="panel-header">
+                            <h3>Model Comparison</h3>
+                            <div class="panel-controls">
+                                <select id="comparison-metric">
+                                    <option value="accuracy">Accuracy</option>
+                                    <option value="loss">Loss</option>
+                                    <option value="time">Training Time</option>
+                                    <option value="size">Model Size</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="chart-container">
+                                <canvas id="comparison-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card glass">
+                            <div class="metric-header">
+                                <h4>Per-Class Accuracy</h4>
+                                <select id="model-selector-accuracy">
+                                    <option value="all">All Models</option>
+                                </select>
+                            </div>
+                            <div class="metric-body">
+                                <div class="chart-container">
+                                    <canvas id="class-accuracy-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-header">
+                                <h4>Confusion Matrix</h4>
+                                <select id="model-selector-confusion">
+                                    <option value="all">All Models</option>
+                                </select>
+                            </div>
+                            <div class="metric-body">
+                                <div class="chart-container">
+                                    <canvas id="confusion-matrix"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-header">
+                                <h4>Training History</h4>
+                                <select id="model-selector-history">
+                                    <option value="all">All Models</option>
+                                </select>
+                            </div>
+                            <div class="metric-body">
+                                <div class="chart-container">
+                                    <canvas id="training-history-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-header">
+                                <h4>Resource Usage</h4>
+                                <select id="model-selector-resource">
+                                    <option value="all">All Models</option>
+                                </select>
+                            </div>
+                            <div class="metric-body">
+                                <div class="chart-container">
+                                    <canvas id="resource-usage-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-panel glass">
+                        <div class="panel-header">
+                            <h3>AI Insights</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="insight-item">
+                                <div class="insight-icon">
+                                    <i class="fas fa-lightbulb"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <h4>Performance Bottleneck</h4>
+                                    <p>Your ResNet model shows confusion between 'cat' and 'dog' classes. Consider adding more specialized augmentation for these classes.</p>
+                                </div>
+                            </div>
+                            <div class="insight-item">
+                                <div class="insight-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <h4>Training Efficiency</h4>
+                                    <p>MobileNet achieves comparable accuracy to CNN with 50% less training time. Consider using this architecture for rapid prototyping.</p>
+                                </div>
+                            </div>
+                            <div class="insight-item">
+                                <div class="insight-icon">
+                                    <i class="fas fa-balance-scale"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <h4>Optimization Suggestion</h4>
+                                    <p>Reducing batch size from 64 to 32 improved validation accuracy by 2.3% on average across all models.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Documentation Section -->
+            <section id="documentation" class="content-section">
+                <div class="section-header">
+                    <h1>Documentation & Resources</h1>
+                    <p>Learn how to work with the CIFAR-10 dataset and this explorer application</p>
+                </div>
+
+                <div class="docs-container">
+                    <div class="docs-sidebar glass">
+                        <div class="docs-search">
+                            <input type="text" placeholder="Search documentation...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <ul class="docs-nav">
+                            <li class="active"><a href="#getting-started">Getting Started</a></li>
+                            <li><a href="#dataset-info">Dataset Information</a></li>
+                            <li><a href="#training-models">Training Models</a></li>
+                            <li><a href="#model-architectures">Model Architectures</a></li>
+                            <li><a href="#performance-analytics">Performance Analytics</a></li>
+                            <li><a href="#api-reference">API Reference</a></li>
+                            <li><a href="#faq">FAQs</a></li>
+                        </ul>
+                    </div>
+                    <div class="docs-content glass">
+                        <div class="doc-section" id="getting-started">
+                            <h2>Getting Started</h2>
+                            <p>The CIFAR-10 Explorer provides a comprehensive interface for working with the CIFAR-10 image classification dataset.</p>
+                            
+                            <h3>Quick Start Guide</h3>
+                            <ol>
+                                <li>Browse the dataset using the <strong>Dataset</strong> section</li>
+                                <li>Train a model using the pre-configured options in the <strong>Models</strong> section</li>
+                                <li>Analyze model performance in the <strong>Analytics</strong> section</li>
+                            </ol>
+                            
+                            <div class="callout">
+                                <i class="fas fa-info-circle"></i>
+                                <div>
+                                    <h4>Tip</h4>
+                                    <p>Start with a simple CNN model to get familiar with the training process before moving to more complex architectures.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- More documentation sections would go here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for image viewer -->
+    <div class="modal" id="image-viewer-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3 class="modal-title">Image Viewer</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="image-showcase">
+                    <img id="showcase-image" src="" alt="CIFAR-10 Image">
+                </div>
+                <div class="image-details">
+                    <div class="detail-group">
+                        <div class="detail-label">Category</div>
+                        <div class="detail-value" id="image-category">-</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Size</div>
+                        <div class="detail-value">32x32 px</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Set</div>
+                        <div class="detail-value" id="image-set">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-light modal-close-btn">Close</button>
+                <button class="btn btn-primary" id="download-image-btn">
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications container -->
+    <div class="toast-container" id="toast-container">
+        <!-- Toast notifications will be appended here by JS -->
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="js/scripts.js"></script>
+</body>
+</html>
