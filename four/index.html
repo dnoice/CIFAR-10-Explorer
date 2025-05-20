@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CIFAR-10 Nexus - An accessible platform for exploring and training models on the CIFAR-10 dataset">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="color-scheme" content="dark light">
+    <meta name="application-name" content="CIFAR-10 Nexus">
+    <!-- OpenGraph tags for better social sharing -->
+    <meta property="og:title" content="CIFAR-10 Nexus | Accessible Dataset Explorer">
+    <meta property="og:description" content="An accessible platform for exploring and training models on the CIFAR-10 dataset">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://cifar10nexus.example.com">
+    
+    <title>CIFAR-10 Nexus | Accessible Dataset Explorer</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="images/icon-192x192.png">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Critical CSS for above-the-fold content -->
+    <style>
+        /* Critical path CSS - optimized for immediate rendering */
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --text-primary: #f8fafc;
+            --bg-main: #111827;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.5;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            z-index: 100;
+            transition: top 0.3s;
+            text-decoration: none;
+            border-radius: 0 0 4px 0;
+        }
+        .skip-link:focus {
+            top: 0;
+            outline: 2px solid white;
+        }
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-main);
+            z-index: 9999;
+            gap: 16px;
+        }
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+        .loading-text {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    
+    <!-- Fonts and icons - loaded asynchronously -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
+          crossorigin="anonymous" referrerpolicy="no-referrer"
+          media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;700&display=swap" 
+          rel="stylesheet" media="print" onload="this.media='all'">
+    
+    <!-- Main CSS file - loaded after critical CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Polyfills for older browsers -->
+    <script>
+        // Feature detection and polyfill loading
+        if (!('IntersectionObserver' in window)) {
+            document.write('<script src="https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver"><\/script>');
+        }
+        if (!('fetch' in window)) {
+            document.write('<script src="https://polyfill.io/v3/polyfill.min.js?features=fetch"><\/script>');
+        }
+    </script>
+</head>
+<body>
+    <!-- Loading screen (hides when content loads) -->
+    <div class="loading-screen" id="loading-screen" aria-live="polite">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <p class="loading-text">Loading CIFAR-10 Nexus</p>
+        <p class="sr-only">Loading application, please wait. This may take a few moments.</p>
+    </div>
+
+    <!-- Skip navigation for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="app-container" id="app">
+        <!-- Application header with navigation -->
+        <header class="top-nav glass" role="banner">
+            <div class="nav-brand">
+                <div class="logo-container">
+                    <div class="logo-icon" aria-hidden="true">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <span class="logo-text">CIFAR-10 Nexus</span>
+                </div>
+                <!-- Mobile menu button with proper labeling -->
+                <button id="menu-toggle" class="menu-toggle" aria-expanded="false" aria-controls="primary-navigation" aria-label="Toggle navigation menu">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+            </div>
+            
+            <!-- Main navigation with accessibility features -->
+            <nav aria-label="Primary navigation">
+                <ul class="nav-menu" id="primary-navigation">
+                    <li class="nav-item active">
+                        <a href="#dashboard" aria-current="page" data-section="dashboard">
+                            <i class="fas fa-chart-network" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#dataset" data-section="dataset">
+                            <i class="fas fa-database" aria-hidden="true"></i>
+                            <span>Dataset</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#models" data-section="models">
+                            <i class="fas fa-cube" aria-hidden="true"></i>
+                            <span>Models</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#analytics" data-section="analytics">
+                            <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#documentation" data-section="documentation">
+                            <i class="fas fa-book" aria-hidden="true"></i>
+                            <span>Documentation</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Utility controls with accessibility support -->
+            <div class="nav-actions">
+                <!-- Theme toggle -->
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light theme" aria-pressed="true">
+                    <i class="fas fa-moon" aria-hidden="true"></i>
+                    <span class="sr-only">Dark Mode Active</span>
+                </button>
+                
+                <!-- Data refresh button -->
+                <button id="refresh-data" class="action-button pulse-effect" aria-label="Refresh data">
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                    <span class="sr-only">Refresh Data</span>
+                </button>
+                
+                <!-- Language selector -->
+                <div class="language-selector">
+                    <button aria-haspopup="listbox" aria-expanded="false" id="language-button">
+                        <i class="fas fa-globe" aria-hidden="true"></i>
+                        <span class="current-language">EN</span>
+                    </button>
+                    <ul role="listbox" id="language-menu" class="hidden" aria-labelledby="language-button">
+                        <li role="option" aria-selected="true" data-lang="en" tabindex="0">English</li>
+                        <li role="option" aria-selected="false" data-lang="es" tabindex="-1">Español</li>
+                        <li role="option" aria-selected="false" data-lang="fr" tabindex="-1">Français</li>
+                        <li role="option" aria-selected="false" data-lang="de" tabindex="-1">Deutsch</li>
+                        <li role="option" aria-selected="false" data-lang="ja" tabindex="-1">日本語</li>
+                        <li role="option" aria-selected="false" data-lang="ar" dir="rtl" tabindex="-1">العربية</li>
+                    </ul>
+                </div>
+                
+                <!-- Accessibility menu -->
+                <button class="a11y-toggle" aria-label="Accessibility options" aria-haspopup="dialog" id="a11y-toggle">
+                    <i class="fas fa-universal-access" aria-hidden="true"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main content area -->
+        <main class="main-content" id="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active" aria-labelledby="dashboard-heading">
+                <div class="section-header">
+                    <h1 id="dashboard-heading" tabindex="-1">CIFAR-10 Interactive Explorer</h1>
+                    <p>Advanced visualization and training platform for the CIFAR-10 image classification dataset</p>
+                </div>
+
+                <!-- Status Card -->
+                <div class="status-card glass" role="status" aria-live="polite">
+                    <div class="status-icon">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    </div>
+                    <div class="status-content">
+                        <h2>Dataset Ready</h2>
+                        <p>CIFAR-10 contains 60,000 32x32 color images across 10 classes with 6,000 images per class</p>
+                    </div>
+                    <div class="status-actions">
+                        <button class="btn btn-outline-light btn-sm" aria-label="View dataset details">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i> Details
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Grid with accessible data representation -->
+                <div class="stats-grid" aria-label="Dataset statistics overview">
+                    <div class="stat-card glass" data-value="60000">
+                        <div class="stat-icon" aria-hidden="true">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <div class="stat-details">
+                            <div class="stat-value" data-count="60000" aria-live="polite">0</div>
+                            <div class="stat-label" id="total-images-label">Total Images</div>
+                        </div>
+                        <div class="stat-chart" aria-hidden="true">
+                            <div class="chart-bar" style="height: 80%;"></div>
+                            <div class="chart-bar" style="height: 65%;"></div>
+                            <div class="chart-bar" style="height: 90%;"></div>
+                            <div class="chart-bar" style="height: 75%;"></div>
+                            <div class="chart-bar" style="height: 85%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card glass" data-value="10">
+                        <div class="stat-icon" aria-hidden="true">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-details">
+                            <div class="stat-value" data-count="10" aria-live="polite">0</div>
+                            <div class="stat-label">Categories</div>
+                        </div>
+                        <div class="stat-chart" aria-hidden="true">
+                            <div class="radial-progress" data-progress="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card glass" data-value="50000">
+                        <div class="stat-icon" aria-hidden="true">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="stat-details">
+                            <div class="stat-value" data-count="50000" aria-live="polite">0</div>
+                            <div class="stat-label">Training Images</div>
+                        </div>
+                        <div class="stat-chart" aria-hidden="true">
+                            <div class="progress-ring">
+                                <svg viewBox="0 0 36 36" aria-hidden="true">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path class="circle" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card glass" data-value="10000">
+                        <div class="stat-icon" aria-hidden="true">
+                            <i class="fas fa-vial"></i>
+                        </div>
+                        <div class="stat-details">
+                            <div class="stat-value" data-count="10000" aria-live="polite">0</div>
+                            <div class="stat-label">Test Images</div>
+                        </div>
+                        <div class="stat-chart" aria-hidden="true">
+                            <div class="progress-ring">
+                                <svg viewBox="0 0 36 36" aria-hidden="true">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path class="circle" stroke-dasharray="15, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories Grid -->
+                <section class="section-container" aria-labelledby="categories-heading">
+                    <div class="section-header-inline">
+                        <h2 id="categories-heading">Categories</h2>
+                        <div class="tabs-container" role="tablist" aria-label="Dataset partition tabs">
+                            <button id="tab-train" class="tab active" role="tab" aria-selected="true" aria-controls="tab-train-panel" data-tab="train">Training Set</button>
+                            <button id="tab-test" class="tab" role="tab" aria-selected="false" aria-controls="tab-test-panel" data-tab="test">Test Set</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-train-panel" role="tabpanel" aria-labelledby="tab-train" class="categories-grid" aria-live="polite">
+                        <!-- Categories populated by JavaScript -->
+                        <div class="loading-placeholder" aria-hidden="true">
+                            <div class="placeholder-card"></div>
+                            <div class="placeholder-card"></div>
+                            <div class="placeholder-card"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-test-panel" role="tabpanel" aria-labelledby="tab-test" class="categories-grid hidden" aria-live="polite">
+                        <!-- Categories populated by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Recent Activity Timeline -->
+                <section class="section-container" aria-labelledby="activity-heading">
+                    <div class="section-header-inline">
+                        <h2 id="activity-heading">Recent Activity</h2>
+                        <button class="btn btn-sm btn-primary">View All</button>
+                    </div>
+                    
+                    <div class="activity-timeline glass" aria-label="Timeline of recent activities">
+                        <ul class="timeline-list">
+                            <li class="timeline-item">
+                                <div class="timeline-icon" aria-hidden="true">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h3>Model Training Completed</h3>
+                                    <p>ResNet model trained with 85.2% accuracy</p>
+                                    <time class="timeline-time" datetime="2025-05-20T14:00:00">2 hours ago</time>
+                                </div>
+                            </li>
+                            <li class="timeline-item">
+                                <div class="timeline-icon" aria-hidden="true">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h3>Dataset Browsed</h3>
+                                    <p>Viewed 120 images from the "automobile" category</p>
+                                    <time class="timeline-time" datetime="2025-05-19T18:30:00">Yesterday</time>
+                                </div>
+                            </li>
+                            <li class="timeline-item">
+                                <div class="timeline-icon" aria-hidden="true">
+                                    <i class="fas fa-download"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h3>Model Downloaded</h3>
+                                    <p>Downloaded MobileNet trained model (3.8 MB)</p>
+                                    <time class="timeline-time" datetime="2025-05-17T09:15:00">3 days ago</time>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Dataset Section -->
+            <section id="dataset" class="content-section" aria-labelledby="dataset-heading">
+                <div class="section-header">
+                    <h1 id="dataset-heading" tabindex="-1">Dataset Explorer</h1>
+                    <p>Browse and analyze the CIFAR-10 image classification dataset</p>
+                </div>
+
+                <div class="filter-toolbar glass">
+                    <div class="search-box">
+                        <label for="category-search" class="sr-only">Search categories</label>
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="text" id="category-search" placeholder="Search categories..." aria-describedby="search-desc">
+                        <div id="search-desc" class="sr-only">Type to filter categories by name</div>
+                    </div>
+                    <div class="filter-options">
+                        <div class="filter-group">
+                            <label for="sort-select">Sort by</label>
+                            <select id="sort-select" aria-label="Sort categories by">
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="count-high">Count (High-Low)</option>
+                                <option value="count-low">Count (Low-High)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group" role="group" aria-labelledby="view-mode-label">
+                            <span id="view-mode-label" class="filter-label">View</span>
+                            <div class="view-toggles">
+                                <button class="view-toggle active" data-view="grid" aria-pressed="true" aria-label="Grid view">
+                                    <i class="fas fa-th" aria-hidden="true"></i>
+                                </button>
+                                <button class="view-toggle" data-view="list" aria-pressed="false" aria-label="List view">
+                                    <i class="fas fa-list" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dataset-browser">
+                    <div class="category-explorer glass">
+                        <div class="category-header">
+                            <h3>Categories</h3>
+                            <span class="badge">10 total</span>
+                        </div>
+                        <ul class="category-list" id="category-list" aria-label="List of image categories">
+                            <!-- Categories populated by JavaScript -->
+                            <li class="placeholder-line" aria-hidden="true"></li>
+                            <li class="placeholder-line" aria-hidden="true"></li>
+                            <li class="placeholder-line" aria-hidden="true"></li>
+                        </ul>
+                    </div>
+                    <div class="images-preview glass">
+                        <div class="preview-header">
+                            <h3 id="preview-title">Images Preview</h3>
+                            <div class="preview-controls">
+                                <button class="btn btn-sm btn-outline-light" aria-label="Expand preview">
+                                    <i class="fas fa-expand" aria-hidden="true"></i>
+                                </button>
+                                <label for="image-count" class="sr-only">Number of images per page</label>
+                                <select id="image-count" aria-labelledby="preview-title">
+                                    <option value="12">12 images</option>
+                                    <option value="24">24 images</option>
+                                    <option value="48">48 images</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="images-grid" id="images-grid" aria-live="polite" role="region" aria-label="Image grid">
+                            <div class="empty-state">
+                                <i class="fas fa-images" aria-hidden="true"></i>
+                                <p>Select a category to view images</p>
+                            </div>
+                        </div>
+                        <div class="preview-footer">
+                            <div class="selection-info" aria-live="polite">
+                                <span id="selection-count">0 images selected</span>
+                            </div>
+                            <button class="btn btn-primary" id="download-selected" disabled aria-disabled="true">
+                                <i class="fas fa-download" aria-hidden="true"></i> Download Selected
+                            </button>
+                            <div class="pagination" role="navigation" aria-label="Image pagination">
+                                <button class="pagination-btn" id="prev-page" disabled aria-disabled="true" aria-label="Previous page">
+                                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                                </button>
+                                <span id="page-indicator" aria-live="polite">Page 1 of 1</span>
+                                <button class="pagination-btn" id="next-page" disabled aria-disabled="true" aria-label="Next page">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Models Section -->
+            <section id="models" class="content-section" aria-labelledby="models-heading">
+                <div class="section-header">
+                    <h1 id="models-heading" tabindex="-1">Models & Training</h1>
+                    <p>Train and manage machine learning models for the CIFAR-10 dataset</p>
+                </div>
+
+                <div class="models-container">
+                    <div class="training-panel glass">
+                        <div class="panel-header">
+                            <h3>Train New Model</h3>
+                            <button class="btn btn-sm btn-primary" id="advanced-options-btn" aria-expanded="false" aria-controls="advanced-options-section">
+                                <i class="fas fa-sliders-h" aria-hidden="true"></i> Advanced Options
+                            </button>
+                        </div>
+                        <div class="panel-body">
+                            <form id="training-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="model-type">Model Architecture</label>
+                                        <select id="model-type" name="model-type">
+                                            <option value="cnn">Convolutional Neural Network (CNN)</option>
+                                            <option value="resnet">ResNet-18</option>
+                                            <option value="mobilenet">MobileNetV2</option>
+                                            <option value="efficientnet">EfficientNet-B0</option>
+                                        </select>
+                                        <div class="model-info" id="model-info" aria-live="polite">
+                                            <!-- Model info populated by JS -->
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="batch-size">Batch Size</label>
+                                        <select id="batch-size" name="batch-size">
+                                            <option value="16">16</option>
+                                            <option value="32" selected>32</option>
+                                            <option value="64">64</option>
+                                            <option value="128">128</option>
+                                        </select>
+                                        <div class="field-description">Number of images processed together</div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="epochs">Number of Epochs</label>
+                                        <div class="range-input-group">
+                                            <input type="range" id="epochs-range" min="1" max="50" value="10" 
+                                                   aria-label="Set number of epochs with slider"
+                                                   aria-describedby="epochs-description">
+                                            <input type="number" id="epochs" name="epochs" value="10" min="1" max="50"
+                                                   aria-label="Set exact number of epochs" 
+                                                   aria-describedby="epochs-description">
+                                        </div>
+                                        <div id="epochs-description" class="field-description">Number of complete passes through the training dataset</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="learning-rate">Learning Rate</label>
+                                        <select id="learning-rate" name="learning-rate">
+                                            <option value="0.01">0.01</option>
+                                            <option value="0.001" selected>0.001</option>
+                                            <option value="0.0001">0.0001</option>
+                                        </select>
+                                        <div class="field-description">Controls how quickly model adapts to the problem</div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label id="augmentation-group-label">Data Augmentation</label>
+                                        <div class="toggle-options" role="group" aria-labelledby="augmentation-group-label">
+                                            <label class="toggle">
+                                                <input type="checkbox" id="aug-flip" checked>
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-label">Horizontal Flips</span>
+                                            </label>
+                                            <label class="toggle">
+                                                <input type="checkbox" id="aug-rotation" checked>
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-label">Random Rotation</span>
+                                            </label>
+                                            <label class="toggle">
+                                                <input type="checkbox" id="aug-shift">
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-label">Random Shifts</span>
+                                            </label>
+                                            <label class="toggle">
+                                                <input type="checkbox" id="aug-zoom">
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-label">Random Zoom</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row hidden" id="advanced-options-section">
+                                    <div class="form-group">
+                                        <label for="optimizer">Optimizer</label>
+                                        <select id="optimizer" name="optimizer">
+                                            <option value="adam" selected>Adam</option>
+                                            <option value="sgd">SGD</option>
+                                            <option value="rmsprop">RMSprop</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="loss-function">Loss Function</label>
+                                        <select id="loss-function" name="loss-function">
+                                            <option value="categorical_crossentropy" selected>Categorical Cross-Entropy</option>
+                                            <option value="sparse_categorical_crossentropy">Sparse Categorical Cross-Entropy</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="panel-footer">
+                            <button id="reset-form-btn" class="btn btn-outline-light">Reset</button>
+                            <button id="start-training-btn" class="btn btn-gradient">
+                                <i class="fas fa-play" aria-hidden="true"></i> Start Training
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="training-progress glass hidden" id="training-progress-container">
+                        <div class="progress-header">
+                            <h3>Training in Progress</h3>
+                            <div class="status-badge pulse-animation">
+                                <i class="fas fa-circle" aria-hidden="true"></i> Running
+                            </div>
+                        </div>
+                        <div class="progress-body">
+                            <div class="progress-stats">
+                                <div class="stat-item">
+                                    <div class="label">Time Elapsed</div>
+                                    <div class="value" id="training-time" aria-live="polite">00:00:00</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="label">Current Epoch</div>
+                                    <div class="value" id="current-epoch" aria-live="polite">0/10</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="label">Current Accuracy</div>
+                                    <div class="value" id="current-accuracy" aria-live="polite">0.00%</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="label">ETA</div>
+                                    <div class="value" id="training-eta" aria-live="polite">--:--:--</div>
+                                </div>
+                            </div>
+                            <div class="progress-visualization">
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" id="training-progress-bar" style="width: 0%" role="progressbar" 
+                                         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-labelledby="progress-percentage"></div>
+                                </div>
+                                <div class="progress-percentage" id="progress-percentage" aria-live="polite">0%</div>
+                            </div>
+                            <div class="training-log" id="training-log" role="log" aria-label="Training log">
+                                <p>Ready to start training. Configure parameters and click "Start Training"...</p>
+                            </div>
+                            <div class="live-charts">
+                                <div class="chart-container">
+                                    <div class="chart-header">
+                                        <h4 id="accuracy-chart-heading">Accuracy</h4>
+                                    </div>
+                                    <div class="chart-body">
+                                        <canvas id="accuracy-chart" 
+                                                aria-labelledby="accuracy-chart-heading"
+                                                role="img"></canvas>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <div class="chart-header">
+                                        <h4 id="loss-chart-heading">Loss</h4>
+                                    </div>
+                                    <div class="chart-body">
+                                        <canvas id="loss-chart"
+                                                aria-labelledby="loss-chart-heading"
+                                                role="img"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-footer">
+                            <button id="cancel-training-btn" class="btn btn-outline-light">Cancel</button>
+                            <button id="pause-training-btn" class="btn btn-primary">
+                                <i class="fas fa-pause" aria-hidden="true"></i> Pause
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="section-container">
+                        <div class="section-header-inline">
+                            <h3>Saved Models</h3>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-outline-light" id="models-sort-btn">
+                                    <i class="fas fa-sort" aria-hidden="true"></i> Sort
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="models-filter-btn">
+                                    <i class="fas fa-filter" aria-hidden="true"></i> Filter
+                                </button>
+                            </div>
+                        </div>
+                        <div id="models-container" class="models-grid" role="list" aria-label="Saved machine learning models">
+                            <!-- Empty state for models -->
+                            <div class="empty-state" id="empty-models">
+                                <i class="fas fa-cubes" aria-hidden="true"></i>
+                                <h3>No Models Saved Yet</h3>
+                                <p>Train your first model to see it appear here</p>
+                            </div>
+                            <!-- Model cards will be added by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="content-section" aria-labelledby="analytics-heading">
+                <div class="section-header">
+                    <h1 id="analytics-heading" tabindex="-1">Performance Analytics</h1>
+                    <p>Compare models and analyze performance metrics</p>
+                </div>
+
+                <div class="analytics-dashboard">
+                    <div class="chart-panel glass">
+                        <div class="panel-header">
+                            <h3 id="comparison-chart-heading">Model Comparison</h3>
+                            <div class="panel-controls">
+                                <label for="comparison-metric" class="sr-only">Select comparison metric</label>
+                                <select id="comparison-metric" aria-labelledby="comparison-chart-heading">
+                                    <option value="accuracy">Accuracy</option>
+                                    <option value="loss">Loss</option>
+                                    <option value="time">Training Time</option>
+                                    <option value="size">Model Size</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="chart-container">
+                                <canvas id="comparison-chart" 
+                                        role="img"
+                                        aria-labelledby="comparison-chart-heading"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card glass">
+                            <div class="metric-header">
+                                <h4 id="class-accuracy-heading">Per-Class Accuracy</h4>
+                                <label for="model-selector-accuracy" class="sr-only">Select model for class accuracy</label>
+                                <select id="model-selector-accuracy" aria-labelledby="class-accuracy-heading">
+                                    <option value="all">All Models</option>
+                                </select>
+                            </div>
+                            <div class="metric-body">
+                                <div class="chart-container">
+                                    <canvas id="class-accuracy-chart" 
+                                            role="img"
+                                            aria-labelledby="class-accuracy-heading"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-header">
+                                <h4 id="confusion-matrix-heading">Confusion Matrix</h4>
+                                <label for="model-selector-confusion" class="sr-only">Select model for confusion matrix</label>
+                                <select id="model-selector-confusion" aria-labelledby="confusion-matrix-heading">
+                                    <option value="all">All Models</option>
+                                </select>
+                            </div>
+                            <div class="metric-body">
+                                <div class="chart-container">
+                                    <canvas id="confusion-matrix" 
+                                            role="img"
+                                            aria-labelledby="confusion-matrix-heading"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-header">
+                                <h4 id="training-history-heading">Training History</h4>
+                                <label for="model-selector-history" class="sr-only">Select model for training history</label>
+                                <select id="model-selector-history" aria-labelledby="training-history-heading">
+                                    <option value="all">All Models</option>
+                                </select>
+                            </div>
+                            <div class="metric-body">
+                                <div class="chart-container">
+                                    <canvas id="training-history-chart" 
+                                            role="img"
+                                            aria-labelledby="training-history-heading"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-header">
+                                <h4 id="resource-usage-heading">Resource Usage</h4>
+                                <label for="model-selector-resource" class="sr-only">Select model for resource usage</label>
+                                <select id="model-selector-resource" aria-labelledby="resource-usage-heading">
+                                    <option value="all">All Models</option>
+                                </select>
+                            </div>
+                            <div class="metric-body">
+                                <div class="chart-container">
+                                    <canvas id="resource-usage-chart" 
+                                            role="img"
+                                            aria-labelledby="resource-usage-heading"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-panel glass">
+                        <div class="panel-header">
+                            <h3>AI Insights</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="insight-item">
+                                <div class="insight-icon" aria-hidden="true">
+                                    <i class="fas fa-lightbulb"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <h4>Performance Bottleneck</h4>
+                                    <p>Your ResNet model shows confusion between 'cat' and 'dog' classes. Consider adding more specialized augmentation for these classes.</p>
+                                </div>
+                            </div>
+                            <div class="insight-item">
+                                <div class="insight-icon" aria-hidden="true">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <h4>Training Efficiency</h4>
+                                    <p>MobileNet achieves comparable accuracy to CNN with 50% less training time. Consider using this architecture for rapid prototyping.</p>
+                                </div>
+                            </div>
+                            <div class="insight-item">
+                                <div class="insight-icon" aria-hidden="true">
+                                    <i class="fas fa-balance-scale"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <h4>Optimization Suggestion</h4>
+                                    <p>Reducing batch size from 64 to 32 improved validation accuracy by 2.3% on average across all models.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Documentation Section -->
+            <section id="documentation" class="content-section" aria-labelledby="documentation-heading">
+                <div class="section-header">
+                    <h1 id="documentation-heading" tabindex="-1">Documentation & Resources</h1>
+                    <p>Learn how to work with the CIFAR-10 dataset and this explorer application</p>
+                </div>
+
+                <div class="docs-container">
+                    <div class="docs-sidebar glass">
+                        <div class="docs-search">
+                            <label for="docs-search-input" class="sr-only">Search documentation</label>
+                            <input type="text" id="docs-search-input" placeholder="Search documentation...">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <nav aria-label="Documentation navigation">
+                            <ul class="docs-nav" role="list">
+                                <li class="active"><a href="#getting-started" aria-current="page">Getting Started</a></li>
+                                <li><a href="#dataset-info">Dataset Information</a></li>
+                                <li><a href="#training-models">Training Models</a></li>
+                                <li><a href="#model-architectures">Model Architectures</a></li>
+                                <li><a href="#performance-analytics">Performance Analytics</a></li>
+                                <li><a href="#api-reference">API Reference</a></li>
+                                <li><a href="#faq">FAQs</a></li>
+                                <li><a href="#accessibility">Accessibility Features</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class="docs-content glass">
+                        <article class="doc-section" id="getting-started">
+                            <h2>Getting Started</h2>
+                            <p>The CIFAR-10 Explorer provides a comprehensive interface for working with the CIFAR-10 image classification dataset.</p>
+                            
+                            <h3>Quick Start Guide</h3>
+                            <ol>
+                                <li>Browse the dataset using the <strong>Dataset</strong> section</li>
+                                <li>Train a model using the pre-configured options in the <strong>Models</strong> section</li>
+                                <li>Analyze model performance in the <strong>Analytics</strong> section</li>
+                            </ol>
+                            
+                            <div class="callout">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                                <div>
+                                    <h4>Tip</h4>
+                                    <p>Start with a simple CNN model to get familiar with the training process before moving to more complex architectures.</p>
+                                </div>
+                            </div>
+                        </article>
+                        
+                        <article class="doc-section" id="dataset-info">
+                            <h2>Dataset Information</h2>
+                            <p>The CIFAR-10 dataset consists of 60,000 32x32 color images in 10 different classes:</p>
+                            
+                            <div class="table-container">
+                                <table aria-label="CIFAR-10 Category Information">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Category</th>
+                                            <th scope="col">Training Images</th>
+                                            <th scope="col">Test Images</th>
+                                            <th scope="col">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Airplane</td>
+                                            <td>5,000</td>
+                                            <td>1,000</td>
+                                            <td>6,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Automobile</td>
+                                            <td>5,000</td>
+                                            <td>1,000</td>
+                                            <td>6,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Bird</td>
+                                            <td>5,000</td>
+                                            <td>1,000</td>
+                                            <td>6,000</td>
+                                        </tr>
+                                        <!-- Additional categories would be listed here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <p>Each image is a 32x32 pixel RGB color image. The dataset is divided into 50,000 training images and 10,000 test images.</p>
+                        </article>
+                        
+                        <!-- Additional documentation sections would be here -->
+                        <article class="doc-section" id="accessibility">
+                            <h2>Accessibility Features</h2>
+                            <p>CIFAR-10 Nexus is designed to be accessible to all users, including those with disabilities. Here are some of the accessibility features:</p>
+                            
+                            <h3>Keyboard Navigation</h3>
+                            <ul>
+                                <li>Full keyboard navigation support</li>
+                                <li>Skip to content link (press Tab when page loads)</li>
+                                <li>Focus indicators for keyboard users</li>
+                                <li>Logical tab order throughout the application</li>
+                            </ul>
+                            
+                            <h3>Screen Reader Support</h3>
+                            <ul>
+                                <li>Proper ARIA landmarks and labels</li>
+                                <li>Live regions for dynamic content</li>
+                                <li>Alternative text for visual elements</li>
+                                <li>Appropriate heading structure</li>
+                            </ul>
+                            
+                            <h3>Visual Adjustments</h3>
+                            <ul>
+                                <li>High contrast mode</li>
+                                <li>Text size adjustments</li>
+                                <li>Reduced motion option</li>
+                                <li>Enhanced focus indicators</li>
+                            </ul>
+                            
+                            <p>Access these features by clicking the accessibility icon <i class="fas fa-universal-access" aria-hidden="true"></i> in the top navigation bar.</p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals and Dialogs -->
+    <!-- Image Viewer Modal -->
+    <div class="modal" id="image-viewer-modal" role="dialog" aria-labelledby="image-viewer-title" aria-modal="true" hidden>
+        <div class="modal-backdrop"></div>
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3 id="image-viewer-title" class="modal-title">Image Viewer</h3>
+                <button class="modal-close" aria-label="Close image viewer">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="image-showcase">
+                    <img id="showcase-image" src="" alt="CIFAR-10 Image" tabindex="0">
+                </div>
+                <div class="image-details">
+                    <div class="detail-group">
+                        <div class="detail-label">Category</div>
+                        <div class="detail-value" id="image-category" aria-live="polite">-</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Size</div>
+                        <div class="detail-value">32x32 px</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Set</div>
+                        <div class="detail-value" id="image-set" aria-live="polite">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-light modal-close-btn">Close</button>
+                <button class="btn btn-primary" id="download-image-btn">
+                    <i class="fas fa-download" aria-hidden="true"></i> Download
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Details Modal -->
+    <div class="modal" id="model-details-modal" role="dialog" aria-labelledby="model-details-title" aria-modal="true" hidden>
+        <div class="modal-backdrop"></div>
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3 id="model-details-title" class="modal-title">Model Details</h3>
+                <button class="modal-close" aria-label="Close model details">&times;</button>
+            </div>
+            <div class="modal-body" id="model-details-content">
+                <!-- Populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-light modal-close-btn">Close</button>
+                <button class="btn btn-primary" id="view-analytics-btn">
+                    <i class="fas fa-chart-bar" aria-hidden="true"></i> View Analytics
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accessibility Panel (appears when a11y button is clicked) -->
+    <div id="a11y-panel" class="a11y-panel" role="dialog" aria-labelledby="a11y-title" aria-modal="true" hidden>
+        <div class="a11y-panel-content">
+            <header>
+                <h2 id="a11y-title">Accessibility Options</h2>
+                <button class="close-panel" aria-label="Close accessibility panel">&times;</button>
+            </header>
+            
+            <div class="a11y-options">
+                <div class="option-group">
+                    <h3 id="text-size-heading">Text Size</h3>
+                    <div class="text-size-controls" role="group" aria-labelledby="text-size-heading">
+                        <button aria-label="Decrease text size" id="text-decrease" class="text-size-btn">A-</button>
+                        <button aria-label="Default text size" id="text-reset" class="text-size-btn">A</button>
+                        <button aria-label="Increase text size" id="text-increase" class="text-size-btn">A+</button>
+                    </div>
+                </div>
+                
+                <div class="option-group">
+                    <h3 id="contrast-heading">Contrast</h3>
+                    <div class="toggle-controls" role="radiogroup" aria-labelledby="contrast-heading">
+                        <label>
+                            <input type="radio" name="contrast" value="normal" checked>
+                            <span>Normal</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="contrast" value="high">
+                            <span>High Contrast</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="option-group">
+                    <h3 id="motion-heading">Motion</h3>
+                    <label class="toggle" aria-labelledby="motion-heading">
+                        <input type="checkbox" id="reduce-motion">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Reduce animations</span>
+                    </label>
+                </div>
+                
+                <div class="option-group">
+                    <h3 id="focus-heading">Focus Indicator</h3>
+                    <label class="toggle" aria-labelledby="focus-heading">
+                        <input type="checkbox" id="enhance-focus">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Enhance focus indicators</span>
+                    </label>
+                </div>
+                
+                <div class="option-group">
+                    <h3 id="screen-reader-heading">Screen Reader Announcements</h3>
+                    <label class="toggle" aria-labelledby="screen-reader-heading">
+                        <input type="checkbox" id="verbose-announcements" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Verbose announcements</span>
+                    </label>
+                    <div class="field-description">Provides additional context for screen reader users</div>
+                </div>
+            </div>
+            
+            <footer>
+                <button class="btn btn-primary" id="save-a11y">Save Preferences</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Announcement container for screen readers -->
+    <div aria-live="polite" aria-atomic="true" class="sr-only" id="announcer"></div>
+
+    <!-- Toast notifications container with live region -->
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+    
+    <!-- Scripts loaded with defer to not block rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" defer
+            integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" 
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="js/scripts.js" defer></script>
+    
+    <!-- Service worker registration - for offline support -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful');
+                }).catch(error => {
+                    console.log('ServiceWorker registration failed', error);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
