@@ -2387,9 +2387,980 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function initializeConfusionMatrix() {
-        // Destroy existing chart if it exists
-        if (STATE.charts.confusionMatrix) {
-            STATE.charts.confusionMatrix.destroy();
+    // Destroy existing chart if it exists
+    if (STATE.charts.confusionMatrix) {
+        STATE.charts.confusionMatrix.destroy();
+    }
+    
+    // Generate sample confusion matrix data
+    const categories = CONFIG.categories.map(c => c.name);
+    const numClasses = categories.length;
+    const confusionData = generateConfusionMatrix(numClasses);
+    
+    // Create confusion matrix chart
+    STATE.charts.confusionMatrix = new Chart(DOM.confusionMatrix, {
+        type: 'matrix',
+        data: {
+            labels: categories.map(c => c.charAt(0).toUpperCase() + c.slice(1)),
+            datasets: [{
+                label: 'Confusion Matrix',
+                data: confusionData,
+                backgroundColor: (context) => {
+                    const value = context.dataset.data[context.dataIndex];
+                    const alpha = Math.min(0.2 + (value.v / 100) * 0.8, 1);
+                    return hexToRgba(CONFIG.chartColors.primary, alpha);
+                },
+                borderColor: 'transparent',
+                borderWidth: 1,
+                width: ({ chart }) => (chart.chartArea || {}).width / numClasses - 2,
+                height: ({ chart }) => (chart.chartArea || {}).height / numClasses - 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: () => '',
+                        label: (context) => {
+                            const v = context.dataset.data[context.dataIndex];
+                            return [
+                                `True: ${context.chart.data.labels[v.y]}`,
+                                `Predicted: ${context.chart.data.labels[v.x]}`,
+                                `Value: ${v.v}%`
+                            ];
+                        }
+                    }
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Predicted Class'
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'True Class'
+                    },
+                    reverse: true
+                }
+            }
+        }
+    });
+}
+
+function updateConfusionMatrix(modelId) {
+    // Skip if chart doesn't exist
+    if (!STATE.charts.confusionMatrix) return;
+    
+    // Generate new data based on selected model
+    const categories = CONFIG.categories.map(c => c.name);
+    const numClasses = categories.length;
+    let confusionData;
+    
+    if (modelId === 'all') {
+        // Average of all models
+        confusionData = generateConfusionMatrix(numClasses);
+    } else {
+        // Specific model - in a real app, we'd get actual data
+        const model = STATE.models.find(m => m.id.toString() === modelId.toString());
+        if (model) {
+            const baseAccuracy = parseFloat(model.accuracy) / 100;
+            confusionData = generateConfusionMatrix(numClasses, baseAccuracy);
+        } else {
+            confusionData = generateConfusionMatrix(numClasses);
+        }
+    }
+    
+    // Update chart data
+    STATE.charts.confusionMatrix.data.datasets[0].data = confusionData;
+    STATE.charts.confusionMatrix.update();
+}
+
+function initializeTrainingHistoryChart() {
+    // Destroy existing chart if it exists
+    if (STATE.charts.trainingHistoryChart) {
+        STATE.charts.trainingHistoryChart.destroy();
+    }
+    
+    // Generate sample training history data
+    let labels = [];
+    let trainAccData = [];
+    let valAccData = [];
+    
+    // If we have models with metrics, use the first one
+    if (STATE.models.length > 0 && STATE.models[0].metrics) {
+        const model = STATE.models[0];
+        const epochs = model.metrics.trainAccuracy.length;
+        
+        labels = Array.from({ length: epochs }, (_, i) => i + 1);
+        trainAccData = model.metrics.trainAccuracy.map(val => val * 100);
+        valAccData = model.metrics.valAccuracy.map(val => val * 100);
+    } else {
+        // Generate placeholder data
+        const epochs = 10;
+        labels = Array.from({ length: epochs }, (_, i) => i + 1);
+        trainAccData = generateSampleMetrics(0.5, 0.85, epochs).map(val => val * 100);
+        valAccData = generateSampleMetrics(0.45, 0.82, epochs).map(val => val * 100);
+    }
+    
+    // Create training history chart
+    STATE.charts.trainingHistoryChart = new Chart(DOM.trainingHistoryChart, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Training Accuracy',
+                    data: trainAccData,
+                    borderColor: CONFIG.chartColors.primary,
+                    backgroundColor: hexToRgba(CONFIG.chartColors.primary, 0.1),
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Validation Accuracy',
+                    data: valAccData,
+                    borderColor: CONFIG.chartColors.success,
+                    backgroundColor: hexToRgba(CONFIG.chartColors.success, 0.1),
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Accuracy (%)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Epoch'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateTrainingHistoryChart(modelId) {
+    // Skip if chart doesn't exist
+    if (!STATE.charts.trainingHistoryChart) return;
+    
+    let labels = [];
+    let trainAccData = [];
+    let valAccData = [];
+    
+    if (modelId === 'all') {
+        // Average across all models with metrics
+        const modelsWithMetrics = STATE.models.filter(m => m.metrics && m.metrics.trainAccuracy);
+        
+        if (modelsWithMetrics.length > 0) {
+            // Find max number of epochs
+            const maxEpochs = Math.max(...modelsWithMetrics.map(m => m.metrics.trainAccuracy.length));
+            labels = Array.from({ length: maxEpochs }, (_, i) => i + 1);
+            
+            // Initialize arrays
+            trainAccData = new Array(maxEpochs).fill(0);
+            valAccData = new Array(maxEpochs).fill(0);
+            
+            // Sum up metrics
+            modelsWithMetrics.forEach(model => {
+                for (let i = 0; i < model.metrics.trainAccuracy.length; i++) {
+                    trainAccData[i] += model.metrics.trainAccuracy[i] * 100 / modelsWithMetrics.length;
+                    valAccData[i] += model.metrics.valAccuracy[i] * 100 / modelsWithMetrics.length;
+                }
+            });
+        }
+    } else {
+        // Specific model
+        const model = STATE.models.find(m => m.id.toString() === modelId.toString());
+        
+        if (model && model.metrics && model.metrics.trainAccuracy) {
+            const epochs = model.metrics.trainAccuracy.length;
+            labels = Array.from({ length: epochs }, (_, i) => i + 1);
+            trainAccData = model.metrics.trainAccuracy.map(val => val * 100);
+            valAccData = model.metrics.valAccuracy.map(val => val * 100);
+        }
+    }
+    
+    // Update chart
+    STATE.charts.trainingHistoryChart.data.labels = labels;
+    STATE.charts.trainingHistoryChart.data.datasets[0].data = trainAccData;
+    STATE.charts.trainingHistoryChart.data.datasets[1].data = valAccData;
+    STATE.charts.trainingHistoryChart.update();
+}
+
+function initializeResourceUsageChart() {
+    // Destroy existing chart if it exists
+    if (STATE.charts.resourceUsageChart) {
+        STATE.charts.resourceUsageChart.destroy();
+    }
+    
+    // Prepare data
+    const modelLabels = STATE.models.map(m => m.name);
+    const modelSizes = STATE.models.map(m => {
+        // Extract numeric size from the size string (e.g., "4.9 MB" -> 4.9)
+        const sizeMatch = m.size.match(/(\d+(\.\d+)?)/);
+        return sizeMatch ? parseFloat(sizeMatch[1]) : 0;
+    });
+    
+    const trainingTimes = STATE.models.map(m => {
+        // Convert training time string to seconds (e.g., "8m 15s" -> 495)
+        let seconds = 0;
+        const minutesMatch = m.trainingTime.match(/(\d+)m/);
+        const secondsMatch = m.trainingTime.match(/(\d+)s/);
+        
+        if (minutesMatch) seconds += parseInt(minutesMatch[1]) * 60;
+        if (secondsMatch) seconds += parseInt(secondsMatch[1]);
+        
+        return seconds / 60; // Return as minutes
+    });
+    
+    // Create resource usage chart
+    STATE.charts.resourceUsageChart = new Chart(DOM.resourceUsageChart, {
+        type: 'bar',
+        data: {
+            labels: modelLabels,
+            datasets: [
+                {
+                    label: 'Model Size (MB)',
+                    data: modelSizes,
+                    backgroundColor: hexToRgba(CONFIG.chartColors.primary, 0.7),
+                    borderColor: CONFIG.chartColors.primary,
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Training Time (min)',
+                    data: trainingTimes,
+                    backgroundColor: hexToRgba(CONFIG.chartColors.secondary, 0.7),
+                    borderColor: CONFIG.chartColors.secondary,
+                    borderWidth: 1,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Models'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Size (MB)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Time (min)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateResourceUsageChart(modelId) {
+    // Skip if chart doesn't exist
+    if (!STATE.charts.resourceUsageChart) return;
+    
+    let modelLabels = [];
+    let modelSizes = [];
+    let trainingTimes = [];
+    
+    if (modelId === 'all') {
+        // All models
+        modelLabels = STATE.models.map(m => m.name);
+        
+        modelSizes = STATE.models.map(m => {
+            const sizeMatch = m.size.match(/(\d+(\.\d+)?)/);
+            return sizeMatch ? parseFloat(sizeMatch[1]) : 0;
+        });
+        
+        trainingTimes = STATE.models.map(m => {
+            let seconds = 0;
+            const minutesMatch = m.trainingTime.match(/(\d+)m/);
+            const secondsMatch = m.trainingTime.match(/(\d+)s/);
+            
+            if (minutesMatch) seconds += parseInt(minutesMatch[1]) * 60;
+            if (secondsMatch) seconds += parseInt(secondsMatch[1]);
+            
+            return seconds / 60; // Return as minutes
+        });
+    } else {
+        // Specific model
+        const model = STATE.models.find(m => m.id.toString() === modelId.toString());
+        
+        if (model) {
+            modelLabels = [model.name];
+            
+            const sizeMatch = model.size.match(/(\d+(\.\d+)?)/);
+            modelSizes = [sizeMatch ? parseFloat(sizeMatch[1]) : 0];
+            
+            let seconds = 0;
+            const minutesMatch = model.trainingTime.match(/(\d+)m/);
+            const secondsMatch = model.trainingTime.match(/(\d+)s/);
+            
+            if (minutesMatch) seconds += parseInt(minutesMatch[1]) * 60;
+            if (secondsMatch) seconds += parseInt(secondsMatch[1]);
+            
+            trainingTimes = [seconds / 60];
+        }
+    }
+    
+    // Update chart
+    STATE.charts.resourceUsageChart.data.labels = modelLabels;
+    STATE.charts.resourceUsageChart.data.datasets[0].data = modelSizes;
+    STATE.charts.resourceUsageChart.data.datasets[1].data = trainingTimes;
+    STATE.charts.resourceUsageChart.update();
+}
+
+function updateClassAccuracyChart(modelId) {
+    // Skip if chart doesn't exist
+    if (!STATE.charts.classAccuracyChart) return;
+    
+    let classAccuracyData;
+    
+    if (modelId === 'all') {
+        // Average of all models
+        let avgAccuracy = 0;
+        STATE.models.forEach(model => {
+            avgAccuracy += parseFloat(model.accuracy);
+        });
+        avgAccuracy = (avgAccuracy / STATE.models.length) / 100;
+        
+        classAccuracyData = generateClassAccuracies(avgAccuracy);
+    } else {
+        // Specific model
+        const model = STATE.models.find(m => m.id.toString() === modelId.toString());
+        if (model) {
+            const baseAccuracy = parseFloat(model.accuracy) / 100;
+            classAccuracyData = generateClassAccuracies(baseAccuracy);
+        } else {
+            classAccuracyData = generateClassAccuracies(0.85);
+        }
+    }
+    
+    // Update chart data
+    STATE.charts.classAccuracyChart.data.datasets[0].data = classAccuracyData;
+    STATE.charts.classAccuracyChart.update();
+}
+
+/**
+ * Helper Functions
+ * ==============
+ */
+function generateClassAccuracies(baseAccuracy) {
+    // Generate per-class accuracies with some variation
+    return CONFIG.categories.map(category => {
+        // Add some variation per category - some classes are harder to classify
+        let adjustment = 0;
+        
+        // Make some categories slightly more difficult than others
+        if (['cat', 'dog', 'deer'].includes(category.name)) {
+            adjustment = -0.05; // These are often confused
+        } else if (['airplane', 'ship'].includes(category.name)) {
+            adjustment = 0.03; // These are easier to distinguish
         }
         
-        // Create confusion matrix
+        // Add some randomness
+        const randomFactor = Math.random() * 0.06 - 0.03;
+        
+        // Calculate accuracy with bounds
+        const accuracy = Math.min(Math.max(baseAccuracy + adjustment + randomFactor, 0.5), 0.98);
+        
+        // Return as percentage
+        return accuracy * 100;
+    });
+}
+
+function generateConfusionMatrix(numClasses, baseAccuracy = 0.85) {
+    const data = [];
+    const categories = CONFIG.categories.map(c => c.name);
+    
+    // Generate data for each cell in the matrix
+    for (let y = 0; y < numClasses; y++) {
+        for (let x = 0; x < numClasses; x++) {
+            let value;
+            
+            if (x === y) {
+                // Diagonal elements are true positives (class accuracy)
+                // Add some variation for different classes
+                let adjustment = 0;
+                
+                if (['cat', 'dog', 'deer'].includes(categories[y])) {
+                    adjustment = -5;
+                } else if (['airplane', 'ship'].includes(categories[y])) {
+                    adjustment = 3;
+                }
+                
+                // Apply some randomness
+                const randomFactor = Math.random() * 6 - 3;
+                value = Math.round(baseAccuracy * 100 + adjustment + randomFactor);
+                
+                // Ensure reasonable bounds
+                value = Math.min(Math.max(value, 60), 98);
+            } else {
+                // Off-diagonal elements are misclassifications
+                // Make similar categories more likely to be confused
+                let confusionFactor = 0;
+                
+                // Define categories that are more easily confused
+                const confusionPairs = [
+                    ['cat', 'dog'],
+                    ['deer', 'horse'],
+                    ['automobile', 'truck'],
+                    ['airplane', 'ship']
+                ];
+                
+                // Check if current pair is in confusion pairs
+                for (const pair of confusionPairs) {
+                    if (pair.includes(categories[x]) && pair.includes(categories[y])) {
+                        confusionFactor = 5;
+                        break;
+                    }
+                }
+                
+                // Calculate confusion value
+                value = Math.round((Math.random() * 3 + confusionFactor) * (1 - baseAccuracy));
+                
+                // Ensure it's not too high
+                value = Math.min(value, 15);
+            }
+            
+            // Add data point
+            data.push({ x, y, v: value });
+        }
+    }
+    
+    return data;
+}
+
+function getModelTypeColor(modelType) {
+    // Get color based on model type
+    const colorMap = {
+        'cnn': CONFIG.chartColors.primary,
+        'resnet': CONFIG.chartColors.accent,
+        'mobilenet': CONFIG.chartColors.info,
+        'efficientnet': CONFIG.chartColors.success
+    };
+    
+    return colorMap[modelType] || CONFIG.chartColors.gray;
+}
+
+function generateSampleMetrics(start, end, steps, inverted = false) {
+    // Generate sample metrics data with learning curve pattern
+    const result = [];
+    
+    for (let i = 0; i < steps; i++) {
+        const progress = i / (steps - 1);
+        
+        // Logarithmic curve (faster improvement early, slower later)
+        const curveValue = inverted ?
+            end + (start - end) * Math.exp(-5 * progress) :
+            start + (end - start) * (1 - Math.exp(-5 * progress));
+        
+        // Add some noise
+        const noise = (Math.random() - 0.5) * 0.03;
+        const value = Math.max(0, Math.min(1, curveValue + noise));
+        
+        result.push(value);
+    }
+    
+    return result;
+}
+
+function hexToRgba(hex, alpha = 1) {
+    // Convert hex color to rgba
+    let r = 0, g = 0, b = 0;
+    
+    // Remove the hash if it exists
+    hex = hex.replace('#', '');
+    
+    // Handle 3-digit hex
+    if (hex.length === 3) {
+        r = parseInt(hex.charAt(0) + hex.charAt(0), 16);
+        g = parseInt(hex.charAt(1) + hex.charAt(1), 16);
+        b = parseInt(hex.charAt(2) + hex.charAt(2), 16);
+    } 
+    // Handle 6-digit hex
+    else if (hex.length === 6) {
+        r = parseInt(hex.substring(0, 2), 16);
+        g = parseInt(hex.substring(2, 4), 16);
+        b = parseInt(hex.substring(4, 6), 16);
+    }
+    
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function formatTime(seconds) {
+    // Format seconds into HH:MM:SS
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    return [
+        hours.toString().padStart(2, '0'),
+        minutes.toString().padStart(2, '0'),
+        secs.toString().padStart(2, '0')
+    ].join(':');
+}
+
+function formatDate(date) {
+    // Format date as YYYY-MM-DD
+    return [
+        date.getFullYear(),
+        (date.getMonth() + 1).toString().padStart(2, '0'),
+        date.getDate().toString().padStart(2, '0')
+    ].join('-');
+}
+
+function numberWithCommas(x) {
+    // Add commas to large numbers
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+/**
+ * Modal Handling
+ * ============
+ */
+function showModal(modal) {
+    if (!modal) return;
+    
+    // Remove hidden attribute
+    modal.removeAttribute('hidden');
+    
+    // Add show class (for animation)
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+    
+    // Set focus to the first focusable element
+    const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable.length > 0) {
+        focusable[0].focus();
+    }
+    
+    // Add close on escape key
+    document.addEventListener('keydown', closeModalOnEscape);
+    
+    // Add close on click outside
+    document.addEventListener('click', closeModalOnOutsideClick);
+}
+
+function hideModal(modal) {
+    if (!modal) return;
+    
+    // Remove show class (for animation)
+    modal.classList.remove('show');
+    
+    // Hide after animation
+    setTimeout(() => {
+        modal.setAttribute('hidden', 'true');
+    }, 300);
+    
+    // Remove event listeners
+    document.removeEventListener('keydown', closeModalOnEscape);
+    document.removeEventListener('click', closeModalOnOutsideClick);
+}
+
+function closeModalOnEscape(event) {
+    if (event.key === 'Escape') {
+        // Close any visible modals
+        DOM.modals.forEach(modal => {
+            if (!modal.hasAttribute('hidden')) {
+                hideModal(modal);
+            }
+        });
+    }
+}
+
+function closeModalOnOutsideClick(event) {
+    DOM.modals.forEach(modal => {
+        if (!modal.hasAttribute('hidden')) {
+            // Check if click was on backdrop
+            if (event.target.classList.contains('modal-backdrop')) {
+                hideModal(modal);
+            }
+        }
+    });
+}
+
+/**
+ * Toast Notifications
+ * =================
+ */
+function showToast(options) {
+    const { title, message, type = 'info', duration = 5000 } = options;
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    
+    // Create icon based on type
+    let icon;
+    switch (type) {
+        case 'success': icon = 'fas fa-check-circle'; break;
+        case 'warning': icon = 'fas fa-exclamation-triangle'; break;
+        case 'error': icon = 'fas fa-times-circle'; break;
+        default: icon = 'fas fa-info-circle';
+    }
+    
+    // Set content
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <i class="${icon}" aria-hidden="true"></i>
+        </div>
+        <div class="toast-content">
+            <h4 class="toast-title">${title}</h4>
+            <p class="toast-message">${message}</p>
+        </div>
+        <button class="toast-close" aria-label="Close notification">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    `;
+    
+    // Add to container
+    DOM.toastContainer.appendChild(toast);
+    
+    // Add event listener to close button
+    const closeBtn = toast.querySelector('.toast-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            removeToast(toast);
+        });
+    }
+    
+    // Animate in
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // Auto remove after duration
+    const timeoutId = setTimeout(() => {
+        removeToast(toast);
+    }, duration);
+    
+    // Store in state for tracking
+    STATE.toasts.push({
+        element: toast,
+        timeoutId: timeoutId
+    });
+}
+
+function removeToast(toast) {
+    // Find toast in state
+    const index = STATE.toasts.findIndex(t => t.element === toast);
+    
+    if (index !== -1) {
+        // Clear timeout
+        clearTimeout(STATE.toasts[index].timeoutId);
+        
+        // Remove from state
+        STATE.toasts.splice(index, 1);
+    }
+    
+    // Animate out
+    toast.classList.remove('show');
+    
+    // Remove from DOM after animation
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 300);
+}
+
+/**
+ * Event Listeners
+ * =============
+ */
+function setupEventListeners() {
+    // Nav menu toggle for mobile
+    if (DOM.menuToggle && DOM.primaryNavigation) {
+        DOM.menuToggle.addEventListener('click', () => {
+            const isExpanded = DOM.menuToggle.getAttribute('aria-expanded') === 'true';
+            DOM.menuToggle.setAttribute('aria-expanded', (!isExpanded).toString());
+            DOM.primaryNavigation.classList.toggle('show', !isExpanded);
+        });
+    }
+    
+    // Navigation links
+    if (DOM.navItems) {
+        DOM.navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = item.dataset.section;
+                if (section) {
+                    navigateToSection(section);
+                }
+            });
+        });
+    }
+    
+    // Theme toggle
+    if (DOM.themeToggle) {
+        DOM.themeToggle.addEventListener('click', toggleTheme);
+    }
+    
+    // Accessibility panel toggle
+    if (DOM.a11yToggle) {
+        DOM.a11yToggle.addEventListener('click', toggleA11yPanel);
+    }
+    
+    // A11y panel controls
+    if (DOM.textDecrease) {
+        DOM.textDecrease.addEventListener('click', () => {
+            STATE.a11ySettings.textSize = Math.max(0.8, STATE.a11ySettings.textSize - 0.1);
+            applyA11ySettings();
+        });
+    }
+    
+    if (DOM.textReset) {
+        DOM.textReset.addEventListener('click', () => {
+            STATE.a11ySettings.textSize = 1;
+            applyA11ySettings();
+        });
+    }
+    
+    if (DOM.textIncrease) {
+        DOM.textIncrease.addEventListener('click', () => {
+            STATE.a11ySettings.textSize = Math.min(1.4, STATE.a11ySettings.textSize + 0.1);
+            applyA11ySettings();
+        });
+    }
+    
+    if (DOM.contrastOptions) {
+        DOM.contrastOptions.forEach(option => {
+            option.addEventListener('change', () => {
+                STATE.a11ySettings.highContrast = option.value === 'high';
+                applyA11ySettings();
+            });
+        });
+    }
+    
+    if (DOM.reduceMotion) {
+        DOM.reduceMotion.addEventListener('change', () => {
+            STATE.a11ySettings.reduceMotion = DOM.reduceMotion.checked;
+            applyA11ySettings();
+        });
+    }
+    
+    if (DOM.enhanceFocus) {
+        DOM.enhanceFocus.addEventListener('change', () => {
+            STATE.a11ySettings.enhanceFocus = DOM.enhanceFocus.checked;
+            applyA11ySettings();
+        });
+    }
+    
+    if (DOM.verboseAnnouncements) {
+        DOM.verboseAnnouncements.addEventListener('change', () => {
+            STATE.a11ySettings.verboseAnnouncements = DOM.verboseAnnouncements.checked;
+            applyA11ySettings();
+        });
+    }
+    
+    if (DOM.saveA11yBtn) {
+        DOM.saveA11yBtn.addEventListener('click', saveA11ySettings);
+    }
+    
+    // Language menu
+    if (DOM.languageButton) {
+        DOM.languageButton.addEventListener('click', toggleLanguageMenu);
+    }
+    
+    if (DOM.languageOptions) {
+        DOM.languageOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                selectLanguage(option.dataset.lang);
+            });
+            
+            // Add keyboard support
+            option.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectLanguage(option.dataset.lang);
+                }
+            });
+        });
+    }
+    
+    // Close modals
+    if (DOM.modalCloseBtns) {
+        DOM.modalCloseBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modal = btn.closest('.modal');
+                if (modal) {
+                    hideModal(modal);
+                }
+            });
+        });
+    }
+    
+    // Dataset browser controls
+    if (DOM.sortSelect) {
+        DOM.sortSelect.addEventListener('change', () => {
+            STATE.sortOrder = DOM.sortSelect.value;
+            // In a real app, this would re-sort the dataset
+            showToast({
+                title: 'Sorting Applied',
+                message: `Dataset sorted by ${DOM.sortSelect.options[DOM.sortSelect.selectedIndex].text}`,
+                type: 'info'
+            });
+        });
+    }
+    
+    if (DOM.viewToggles) {
+        DOM.viewToggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                DOM.viewToggles.forEach(t => {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-pressed', 'false');
+                });
+                
+                toggle.classList.add('active');
+                toggle.setAttribute('aria-pressed', 'true');
+                
+                STATE.viewMode = toggle.dataset.view;
+                // In a real app, this would change the view mode
+                showToast({
+                    title: 'View Mode Changed',
+                    message: `View mode changed to ${STATE.viewMode}`,
+                    type: 'info'
+                });
+            });
+        });
+    }
+    
+    if (DOM.imageCount) {
+        DOM.imageCount.addEventListener('change', () => {
+            STATE.itemsPerPage = parseInt(DOM.imageCount.value, 10);
+            STATE.currentPage = 1;
+            
+            if (STATE.currentCategory) {
+                loadCategoryImages(STATE.currentCategory);
+            }
+        });
+    }
+    
+    if (DOM.prevPage) {
+        DOM.prevPage.addEventListener('click', () => {
+            if (STATE.currentPage > 1) {
+                STATE.currentPage--;
+                loadCategoryImages(STATE.currentCategory);
+            }
+        });
+    }
+    
+    if (DOM.nextPage) {
+        DOM.nextPage.addEventListener('click', () => {
+            // In a real app, we would check against total pages
+            STATE.currentPage++;
+            loadCategoryImages(STATE.currentCategory);
+        });
+    }
+    
+    // Category search
+    if (DOM.categorySearch) {
+        DOM.categorySearch.addEventListener('input', () => {
+            const searchTerm = DOM.categorySearch.value.toLowerCase();
+            
+            if (DOM.categoryList) {
+                const categoryItems = DOM.categoryList.querySelectorAll('li');
+                
+                categoryItems.forEach(item => {
+                    const categoryName = item.dataset.category.toLowerCase();
+                    const shouldShow = categoryName.includes(searchTerm);
+                    item.style.display = shouldShow ? 'flex' : 'none';
+                });
+                
+                // Show message if no results
+                const visibleItems = [...categoryItems].filter(item => item.style.display !== 'none');
+                
+                if (visibleItems.length === 0 && searchTerm.length > 0) {
+                    announceScreenReader(`No categories matching "${searchTerm}" found.`);
+                } else if (searchTerm.length > 0) {
+                    announceScreenReader(`Found ${visibleItems.length} categories matching "${searchTerm}".`);
+                }
+            }
+        });
+    }
+    
+    // Refresh data button
+    if (DOM.refreshData) {
+        DOM.refreshData.addEventListener('click', () => {
+            // Simulate data refresh
+            showToast({
+                title: 'Refreshing Data',
+                message: 'Fetching the latest dataset information...',
+                type: 'info'
+            });
+            
+            setTimeout(() => {
+                showToast({
+                    title: 'Data Refreshed',
+                    message: 'The dataset information has been updated.',
+                    type: 'success'
+                });
+                
+                // In a real app, this would fetch new data
+                announceScreenReader('Data has been refreshed successfully.');
+            }, 1500);
+        });
+    }
+}
+
+// Initialize the application when DOM is loaded
+initializeApp();
